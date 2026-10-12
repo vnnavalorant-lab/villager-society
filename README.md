@@ -5,13 +5,19 @@ memória, reputação por vila, regras locais, descontos, cartas de recomendaç�
 
 ## Status
 
-**Etapa 1 de 7 — base (não compilada ainda).**
+**Etapa 2 de 7 — vilas e reputação.**
 
-Implementado: build, `fabric.mod.json`, configuração validada (`config/villager_society.json`),
-persistência no mundo (vilas, reputação, recomendações) e testes da config.
+Implementado: build, configuração validada (`config/villager_society.json`), persistência no mundo,
+detecção e registro de vilas por POIs (camas, estações de trabalho, sino), personalidades persistentes,
+reputação -100..+100 por jogador e vila (níveis, anti-duplicação, recuperação lazy, crimes graves),
+comando `/villagersociety info`.
 
-Pendente: vilas/personalidades, reputação, eventos e testemunhas, economia, carta de recomendação,
-diálogos, rebelião/IA, testes de jogo.
+Para testar a reputação no jogo, ponha `"debugCommands": true` na config e use
+`/villagersociety debug break_crop` (ou `trade`, `donate_item`, `kill_villager`...), depois `/villagersociety info`.
+
+Pendente: eventos e testemunhas, economia, carta de recomendação, diálogos, rebelião/IA.
+Limitações atuais: só Overworld; líder da vila ainda não é escolhido; as ações ainda não são disparadas
+pelo jogo (só pelo comando de debug).
 
 ## Compilar
 

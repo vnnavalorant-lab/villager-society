@@ -90,6 +90,10 @@ public class ModConfig {
 	// ---- History limits ----
 	public int maxHistoryEntriesPerPlayer = 30;
 
+	// ---- Debug ----
+	/** Enables /villagersociety debug <action> (changes your own reputation; for testing only). */
+	public boolean debugCommands = false;
+
 	/** Clamps every field into a safe range. */
 	public void validate() {
 		repTradeCompleted = clamp(repTradeCompleted, 0, 10);
