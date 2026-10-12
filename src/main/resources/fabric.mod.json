@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "villager_society",
+  "version": "${version}",
+  "name": "Villager Society",
+  "description": "Villagers with memory, reputation, local rules, trade relationships and organized rebellions.",
+  "authors": ["Villager Society Team"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.villagersociety.VillagerSociety"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
