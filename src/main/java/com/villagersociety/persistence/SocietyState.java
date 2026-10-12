@@ -6,7 +6,6 @@ import com.villagersociety.VillagerSociety;
 import com.villagersociety.persistence.SocietyData.RecommendationRecord;
 import com.villagersociety.persistence.SocietyData.VillageData;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -22,8 +21,7 @@ import java.util.UUID;
  * only marked dirty when something actually changes (never per tick).
  *
  * UNVERIFIED API POINTS (1.21.11, Mojang mappings) — check these when compiling:
- *  - SavedDataType constructor signature (id, constructor, codec, DataFixTypes)
- *  - ResourceLocation was renamed to Identifier in 1.21.11 (Identifier.fromNamespaceAndPath)
+ *  - SavedDataType constructor: id is a String (confirmed); check constructor/codec/DataFixTypes order
  *  - MinecraftServer#overworld() and ServerLevel#getDataStorage().computeIfAbsent(type)
  * All of them are isolated in this class on purpose.
  */
@@ -39,7 +37,7 @@ public class SocietyState extends SavedData {
 	).apply(i, SocietyState::new));
 
 	public static final SavedDataType<SocietyState> TYPE = new SavedDataType<>(
-		Identifier.fromNamespaceAndPath(VillagerSociety.MOD_ID, "society"),
+		VillagerSociety.MOD_ID + "_society", // 1.21.11: the id is a String (confirmed by compiler)
 		SocietyState::new,
 		CODEC,
 		null // no DataFixer: this is a modded save with its own schema

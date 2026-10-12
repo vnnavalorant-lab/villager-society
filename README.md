@@ -22,4 +22,4 @@ Localmente: `gradle build` (Gradle 9.x compatível com o Loom) → `build/libs/`
 ## Antes do primeiro build, confira
 
 - `gradle.properties`: versões de Loom, Fabric Loader e Fabric API (valores são palpites; veja fabricmc.net/develop).
-- `persistence/SocietyState.java`: assinatura de `SavedDataType` e uso de `Identifier` na 1.21.11.
+- `persistence/SocietyState.java`: o build já confirmou Loom 1.14.10 e que o id do `SavedDataType` é `String`; resta validar os demais pontos de API.
