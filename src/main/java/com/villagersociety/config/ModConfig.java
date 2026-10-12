@@ -38,6 +38,8 @@ public class ModConfig {
 
 	// ---- Reputation recovery ----
 	/** Ticks between passive recovery steps for negative reputation of minor offenses. */
+	/** Max positive reputation a player can earn per village per in-game day (anti-farming). */
+	public int positiveGainCapPerDay = 25;
 	public int recoveryIntervalTicks = 24000;
 	public int recoveryPerInterval = 1;
 	/** Grave offenses block passive recovery for this many ticks. */
@@ -85,7 +87,6 @@ public class ModConfig {
 	public int letterMinGoodDeeds = 3;
 	public int letterTrustBonus = 20;
 	public int letterTrustBonusUnknownVillage = 8;
-	public boolean letterSingleUse = true;
 
 	// ---- History limits ----
 	public int maxHistoryEntriesPerPlayer = 30;
@@ -110,6 +111,7 @@ public class ModConfig {
 		repeatOffenseMultiplier = clamp(repeatOffenseMultiplier, 1.0, 5.0);
 		punishmentIntensity = clamp(punishmentIntensity, 0.1, 3.0);
 
+		positiveGainCapPerDay = clamp(positiveGainCapPerDay, 1, 200);
 		recoveryIntervalTicks = clamp(recoveryIntervalTicks, 1200, 24000 * 60);
 		recoveryPerInterval = clamp(recoveryPerInterval, 0, 20);
 		graveOffenseLockTicks = clamp(graveOffenseLockTicks, 0, 24000 * 365);

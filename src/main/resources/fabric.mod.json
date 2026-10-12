@@ -7,6 +7,7 @@
   "authors": ["Villager Society Team"],
   "license": "MIT",
   "environment": "*",
+  "mixins": ["villager_society.mixins.json"],
   "entrypoints": {
     "main": ["com.villagersociety.VillagerSociety"]
   },

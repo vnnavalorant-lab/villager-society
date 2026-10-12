@@ -93,6 +93,24 @@ public class SocietyState extends SavedData {
 	}
 
 	/**
+	 * Revokes every still-valid letter issued to {@code player} by {@code village}. Called when a new
+	 * letter is issued, so only one letter per player and village is ever valid (lost or duplicated
+	 * older copies stop working).
+	 */
+	public void revokeActiveFor(UUID player, UUID village) {
+		boolean changed = false;
+		for (RecommendationRecord r : recommendations.values()) {
+			if (!r.used && r.player.equals(player) && r.issuerVillage.equals(village)) {
+				r.used = true;
+				changed = true;
+			}
+		}
+		if (changed) {
+			setDirty();
+		}
+	}
+
+	/**
 	 * Atomically marks a recommendation as used. Returns false if it does not exist or was
 	 * already used, so a letter can never be redeemed twice.
 	 */

@@ -11,7 +11,7 @@ import com.villagersociety.config.ModConfig;
 public enum ReputationAction {
 	TRADE("trade", true, false, 0, false, false),
 	REPLANT_CROP("replant_crop", true, false, 200, false, false),
-	DONATE_ITEM("donate_item", true, false, 0, true, true),
+	DONATE_ITEM("donate_item", true, false, 600, true, true),
 	DEFEND_VILLAGER("defend_villager", true, false, 100, true, true),
 	KILL_MONSTER("kill_monster", true, false, 100, false, false),
 	REPAIR_DAMAGE("repair_damage", true, false, 40, true, true),

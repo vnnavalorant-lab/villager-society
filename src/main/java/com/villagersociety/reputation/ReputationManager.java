@@ -17,30 +17,50 @@ import java.util.UUID;
 public final class ReputationManager {
 	/** An offense of the same kind within this window counts as a repeat. */
 	private static final long REPEAT_WINDOW_TICKS = 72_000L;
+	private static final long DAY_TICKS = 24_000L;
 	private static final double ACCIDENT_FACTOR = 0.25;
 	private static final double GRAVE_LOCK_POSITIVE_FACTOR = 0.5;
 
 	private record DedupKey(UUID village, UUID player, ReputationAction action) {
 	}
 
+	private record PairKey(UUID village, UUID player) {
+	}
+
+	private record DailyGain(long start, int gained) {
+	}
+
 	public record Result(boolean counted, int delta, int newScore, ReputationLevel level) {
 	}
 
-	/** Transient anti-duplication timestamps; safe to lose on restart. */
+	/** Transient anti-duplication / anti-farming state; safe to lose on restart. */
 	private final Map<DedupKey, Long> lastCounted = new HashMap<>();
+	private final Map<PairKey, DailyGain> daily = new HashMap<>();
 
 	public Result apply(UUID villageId, UUID player, PlayerStanding st, Personality personality,
 						ReputationAction action, boolean accidental, long now) {
+		return apply(villageId, player, st, personality, action, accidental, now, 1.0);
+	}
+
+	/**
+	 * @param witnessWeight multiplier for offenses: &lt;1 when nobody saw it, &gt;1 when many villagers did.
+	 *                      Ignored for positive actions.
+	 */
+	public Result apply(UUID villageId, UUID player, PlayerStanding st, Personality personality,
+						ReputationAction action, boolean accidental, long now, double witnessWeight) {
 		ModConfig cfg = ModConfig.get();
 		recover(st, now);
 
 		DedupKey key = new DedupKey(villageId, player, action);
 		Long last = lastCounted.get(key);
 		if (action.dedupeTicks() > 0 && last != null && now >= last && now - last < action.dedupeTicks()) {
-			return new Result(false, 0, st.score, ReputationLevel.fromScore(st.score));
+			return ignored(st);
 		}
 		if (lastCounted.size() > 4096) {
 			lastCounted.clear();
+		}
+		if (daily.size() > 4096) {
+			daily.clear();
 		}
 		lastCounted.put(key, now);
 
@@ -48,7 +68,7 @@ public final class ReputationManager {
 		boolean negative = base < 0;
 		double delta;
 		if (negative) {
-			delta = base * cfg.punishmentIntensity * personality.lossMultiplier();
+			delta = base * cfg.punishmentIntensity * personality.lossMultiplier() * witnessWeight;
 			if (action == ReputationAction.BREAK_CROP) {
 				delta *= personality.cropLossMultiplier();
 			}
@@ -73,6 +93,21 @@ public final class ReputationManager {
 		if (applied == 0 && base != 0 && !accidental) {
 			applied = negative ? -1 : 1;
 		}
+
+		if (!negative && applied > 0) {
+			PairKey pair = new PairKey(villageId, player);
+			DailyGain g = daily.get(pair);
+			if (g == null || now < g.start() || now - g.start() >= DAY_TICKS) {
+				g = new DailyGain(now, 0);
+			}
+			int room = cfg.positiveGainCapPerDay - g.gained();
+			if (room <= 0) {
+				return ignored(st);
+			}
+			applied = Math.min(applied, room);
+			daily.put(pair, new DailyGain(g.start(), g.gained() + applied));
+		}
+
 		boolean grave = !accidental && action.isGrave();
 
 		int before = st.score;
@@ -100,6 +135,27 @@ public final class ReputationManager {
 	}
 
 	/**
+	 * Initial trust from a recommendation letter. Never lifts a player to FRIEND or above:
+	 * the bonus is capped just below the FRIEND threshold. Returns the points actually granted.
+	 */
+	public int grantTrust(PlayerStanding st, int amount, long now) {
+		int cap = ReputationLevel.FRIEND.minScore() - 1;
+		if (amount <= 0 || st.score >= cap) {
+			return 0;
+		}
+		int before = st.score;
+		st.setScore(Math.min(cap, before + amount));
+		int actual = st.score - before;
+		st.addHistory(new HistoryEntry("recommendation", actual, now, false), ModConfig.get().maxHistoryEntriesPerPlayer);
+		return actual;
+	}
+
+	/** Highest score a letter can lift a player to (just below FRIEND). */
+	public static int letterScoreCap() {
+		return ReputationLevel.FRIEND.minScore() - 1;
+	}
+
+	/**
 	 * Passive recovery of negative scores toward 0 (never above). Time spent under a grave-offense
 	 * lock does not count. Safe to call at any time and as often as needed.
 	 */
@@ -123,6 +179,10 @@ public final class ReputationManager {
 		if (st.score >= 0) {
 			st.lastRecoveryTime = now;
 		}
+	}
+
+	private static Result ignored(PlayerStanding st) {
+		return new Result(false, 0, st.score, ReputationLevel.fromScore(st.score));
 	}
 
 	private static boolean isRepeat(PlayerStanding st, ReputationAction action, long now) {
