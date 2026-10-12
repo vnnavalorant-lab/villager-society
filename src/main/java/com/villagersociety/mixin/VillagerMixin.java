@@ -1,7 +1,7 @@
 package com.villagersociety.mixin;
 
 import com.villagersociety.economy.TradeHooks;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * The only mixin in the mod, and it only delegates. Villager entities are NOT replaced.
  *
- * UNVERIFIED (1.21.11): the Villager package (this may now be net.minecraft.world.entity.npc.villager.Villager)
+ * UNVERIFIED (1.21.11): the Villager package (package confirmed by the compiler: net.minecraft.world.entity.npc.villager)
  * and the method names updateSpecialPrices(Player) / notifyTrade(MerchantOffer) in Mojang mappings.
  */
 @Mixin(Villager.class)

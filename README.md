@@ -46,5 +46,5 @@ Localmente: `gradle build` (Gradle 9.x compatível com o Loom) → `build/libs/`
 
 - `gradle.properties`: versões de Loom, Fabric Loader e Fabric API (valores são palpites; veja fabricmc.net/develop).
 - `persistence/SocietyState.java`: o build já confirmou Loom 1.14.10 e que o id do `SavedDataType` é `String`.
-- `mixin/VillagerMixin.java`: pacote da classe `Villager` na 1.21.11 e nomes `updateSpecialPrices` / `notifyTrade` (erro de mixin só aparece ao iniciar o jogo, não no build).
+- `mixin/VillagerMixin.java`: nomes dos métodos `updateSpecialPrices` / `notifyTrade` (erro de mixin só aparece ao iniciar o jogo, não no build).
 - `events/*`, `economy/TradeHooks.java`, `recommendation/*`: assinaturas dos callbacks do Fabric, `MerchantOffer`, `CompoundTag#getStringOr`, `PoiTypes.forState`.
