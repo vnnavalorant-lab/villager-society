@@ -30,6 +30,7 @@ import java.util.UUID;
  * /villagersociety info                 -> village, leader and your standing at your position
  * /villagersociety debug <action>       -> applies a reputation action to yourself (debugCommands=true only)
  * /villagersociety debug set <score>    -> sets your score in the current village (debugCommands=true only)
+ * /villagersociety debug enemy          -> score -100 with a grave-offense lock (no passive recovery)
  * /villagersociety debug maxout         -> score 90 + enough trades/good deeds for a letter (debugCommands=true only)
  *
  * UNVERIFIED API POINTS (1.21.11): CommandSourceStack#getPlayer/getLevel/getServer/sendSuccess/sendFailure,
@@ -50,6 +51,7 @@ public final class SocietyCommands {
 					debug.then(Commands.literal(action.id()).executes(ctx -> debugAction(ctx.getSource(), action)));
 				}
 				debug.then(Commands.literal("maxout").executes(ctx -> maxOut(ctx.getSource())));
+				debug.then(Commands.literal("enemy").executes(ctx -> makeEnemy(ctx.getSource())));
 				debug.then(Commands.literal("set").then(Commands.argument("score", IntegerArgumentType.integer(-100, 100))
 					.executes(ctx -> setScore(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "score")))));
 				root.then(debug);
@@ -120,6 +122,23 @@ public final class SocietyCommands {
 		st.lastRecoveryTime = c.level.getGameTime();
 		c.state.setDirty();
 		reply(src, "Reputação definida para " + st.score + ".");
+		return 1;
+	}
+
+	private static int makeEnemy(CommandSourceStack src) {
+		Context c = context(src);
+		if (c == null) {
+			return 0;
+		}
+		long now = c.level.getGameTime();
+		PlayerStanding st = c.village.standing(c.player.getUUID());
+		st.setScore(-100);
+		st.offenses = Math.max(st.offenses, 1);
+		st.lastRecoveryTime = now;
+		// Same lock a real grave offense sets, so the score does not recover on its own while you test.
+		st.graveLockUntil = now + ModConfig.get().graveOffenseLockTicks;
+		c.state.setDirty();
+		reply(src, "Reputação -100 (Inimigo da comunidade) nesta vila. Use debug set <n> ou debug maxout para reverter.");
 		return 1;
 	}
 

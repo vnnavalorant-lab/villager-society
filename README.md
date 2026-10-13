@@ -29,7 +29,7 @@ Pendente: diálogos contextuais (etapa 5), rebelião e IA de combate (etapa 6), 
 - Mercadores recusam trocas se a vila estiver mobilizada/em rebelião ou se sua reputação estiver abaixo do limiar de rebelião.
 
 Para testar sem esperar dias: `"debugCommands": true` na config e use
-`/villagersociety debug maxout` (reputação 90 + requisitos da carta), `debug set <n>`, ou ações como `debug break_crop`.
+`/villagersociety debug maxout` (reputação 90 + requisitos da carta), `debug enemy` (reputação -100, sem recuperação automática), `debug set <n>`, ou ações como `debug break_crop`.
 Com `debugCommands` ligado, jogadores em criativo também geram reputação.
 
 Limitações atuais: só Overworld; contêiner comunitário = bloco de POI que guarda itens (ex.: barril); ganhos de reputação são
@@ -46,5 +46,5 @@ Localmente: `gradle build` (Gradle 9.x compatível com o Loom) → `build/libs/`
 
 - `gradle.properties`: versões de Loom, Fabric Loader e Fabric API (valores são palpites; veja fabricmc.net/develop).
 - `persistence/SocietyState.java`: o build já confirmou Loom 1.14.10 e que o id do `SavedDataType` é `String`.
-- `mixin/VillagerMixin.java`: nomes dos métodos `updateSpecialPrices` / `notifyTrade` (erro de mixin só aparece ao iniciar o jogo, não no build).
+- `mixin/VillagerMixin.java`: nomes dos métodos `updateSpecialPrices` / `rewardTradeXp` (erro de mixin só aparece ao iniciar o jogo, não no build).
 - `events/*`, `economy/TradeHooks.java`, `recommendation/*`: assinaturas dos callbacks do Fabric, `MerchantOffer`, `CompoundTag#getStringOr`, `PoiTypes.forState`.

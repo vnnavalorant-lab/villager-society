@@ -12,8 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * The only mixin in the mod, and it only delegates. Villager entities are NOT replaced.
  *
- * UNVERIFIED (1.21.11): the Villager package (package confirmed by the compiler: net.minecraft.world.entity.npc.villager)
- * and the method names updateSpecialPrices(Player) / notifyTrade(MerchantOffer) in Mojang mappings.
+ * Package confirmed by the compiler: net.minecraft.world.entity.npc.villager.
+ * UNVERIFIED: updateSpecialPrices(Player) and rewardTradeXp(MerchantOffer) exist in Villager (Mojang mappings).
+ * A wrong name makes the game crash at startup with an InvalidInjectionException naming the method.
  */
 @Mixin(Villager.class)
 public abstract class VillagerMixin {
@@ -23,7 +24,12 @@ public abstract class VillagerMixin {
 		TradeHooks.applyDiscount(self, player, self.getOffers());
 	}
 
-	@Inject(method = "notifyTrade", at = @At("TAIL"))
+	/**
+	 * notifyTrade() lives in AbstractVillager (confirmed by a runtime crash), so we hook rewardTradeXp(),
+	 * the abstract method Villager implements and notifyTrade() calls exactly once per completed trade.
+	 * At HEAD the trading player is still set.
+	 */
+	@Inject(method = "rewardTradeXp", at = @At("HEAD"))
 	private void villagersociety$tradeCompleted(MerchantOffer offer, CallbackInfo ci) {
 		Villager self = (Villager) (Object) this;
 		Player trader = self.getTradingPlayer();
