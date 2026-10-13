@@ -19,6 +19,7 @@ public enum ReputationAction {
 	BREAK_BED_OR_WORKSTATION("break_bed_or_workstation", false, false, 20, false, true),
 	STEAL_CONTAINER("steal_container", false, false, 60, false, true),
 	ATTACK_VILLAGER("attack_villager", false, true, 20, false, true),
+	BREAK_HAY_BALE("break_hay_bale", false, true, 0, false, true),
 	KILL_VILLAGER("kill_villager", false, true, 0, false, true);
 
 	private final String id;
@@ -77,6 +78,7 @@ public enum ReputationAction {
 			case BREAK_BED_OR_WORKSTATION -> c.repBreakBedOrWorkstation;
 			case STEAL_CONTAINER -> c.repStealContainer;
 			case ATTACK_VILLAGER -> c.repAttackVillager;
+			case BREAK_HAY_BALE -> c.repBreakHayBale;
 			case KILL_VILLAGER -> c.repKillVillager;
 		};
 	}

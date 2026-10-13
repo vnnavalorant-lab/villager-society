@@ -44,14 +44,14 @@ public final class SocietyEvents {
 
 	public static void register() {
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
-			if (world instanceof ServerLevel level && player instanceof ServerPlayer sp && !ignored(sp)) {
+			if (world instanceof ServerLevel level && player instanceof ServerPlayer sp && !isIgnored(sp)) {
 				onBlockBreak(level, sp, pos, state);
 			}
 		});
 
 		AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
 			if (world instanceof ServerLevel level && player instanceof ServerPlayer sp
-				&& entity.getType() == EntityType.VILLAGER && !ignored(sp)) {
+				&& entity.getType() == EntityType.VILLAGER && !isIgnored(sp)) {
 				report(level, sp, entity.blockPosition(), ReputationAction.ATTACK_VILLAGER);
 			}
 			return InteractionResult.PASS;
@@ -59,7 +59,7 @@ public final class SocietyEvents {
 
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			Entity killer = source.getEntity();
-			if (!(killer instanceof ServerPlayer sp) || !(entity.level() instanceof ServerLevel level) || ignored(sp)) {
+			if (!(killer instanceof ServerPlayer sp) || !(entity.level() instanceof ServerLevel level) || isIgnored(sp)) {
 				return;
 			}
 			onDeath(level, sp, entity);
@@ -67,7 +67,7 @@ public final class SocietyEvents {
 
 		UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
 			if (world instanceof ServerLevel level && player instanceof ServerPlayer sp
-				&& hand == InteractionHand.MAIN_HAND && !ignored(sp)) {
+				&& hand == InteractionHand.MAIN_HAND && !isIgnored(sp)) {
 				onUseBlock(level, sp, hit.getBlockPos());
 			}
 			return InteractionResult.PASS;
@@ -84,7 +84,7 @@ public final class SocietyEvents {
 		ContainerWatcher.clear();
 	}
 
-	private static boolean ignored(ServerPlayer player) {
+	public static boolean isIgnored(ServerPlayer player) {
 		return !ModConfig.get().debugCommands && (player.isCreative() || player.isSpectator());
 	}
 

@@ -40,12 +40,12 @@ class EconomyTest {
 
 	@Test
 	void merchantsRefuseOnlyWhenRebellingOrEnemy() {
-		assertFalse(TradeRules.shouldRefuse("NONE", 0, cfg));
-		assertFalse(TradeRules.shouldRefuse("NONE", -30, cfg));
-		assertTrue(TradeRules.shouldRefuse("REBELLION", 10, cfg));
-		assertTrue(TradeRules.shouldRefuse("NONE", cfg.rebellionThreshold, cfg));
+		assertFalse(TradeRules.shouldRefuse(false, 0, cfg));
+		assertFalse(TradeRules.shouldRefuse(false, -30, cfg));
+		assertTrue(TradeRules.shouldRefuse(true, 10, cfg));
+		assertTrue(TradeRules.shouldRefuse(false, cfg.rebellionThreshold, cfg));
 		ModConfig off = new ModConfig();
 		off.refuseTradeDuringRebellion = false;
-		assertFalse(TradeRules.shouldRefuse("REBELLION", -100, off));
+		assertFalse(TradeRules.shouldRefuse(true, -100, off));
 	}
 }

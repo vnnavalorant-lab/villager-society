@@ -30,12 +30,16 @@ public final class ReputationManager {
 	private record DailyGain(long start, int gained) {
 	}
 
+	private record HayCount(long start, int count) {
+	}
+
 	public record Result(boolean counted, int delta, int newScore, ReputationLevel level) {
 	}
 
 	/** Transient anti-duplication / anti-farming state; safe to lose on restart. */
 	private final Map<DedupKey, Long> lastCounted = new HashMap<>();
 	private final Map<PairKey, DailyGain> daily = new HashMap<>();
+	private final Map<PairKey, HayCount> hay = new HashMap<>();
 
 	public Result apply(UUID villageId, UUID player, PlayerStanding st, Personality personality,
 						ReputationAction action, boolean accidental, long now) {
@@ -61,6 +65,9 @@ public final class ReputationManager {
 		}
 		if (daily.size() > 4096) {
 			daily.clear();
+		}
+		if (hay.size() > 4096) {
+			hay.clear();
 		}
 		lastCounted.put(key, now);
 
@@ -132,6 +139,43 @@ public final class ReputationManager {
 			st.addHistory(new HistoryEntry(action.id(), actual, now, grave), cfg.maxHistoryEntriesPerPlayer);
 		}
 		return new Result(true, actual, st.score, ReputationLevel.fromScore(st.score));
+	}
+
+	/**
+	 * Whether this (already counted) offense makes the village consider the player an enemy at once.
+	 * Needs a witness: villagers cannot react to a crime nobody saw. Call once per counted offense.
+	 */
+	public boolean triggersHostility(UUID villageId, UUID player, ReputationAction action, boolean witnessed, long now) {
+		ModConfig cfg = ModConfig.get();
+		if (action == ReputationAction.KILL_VILLAGER) {
+			return witnessed && cfg.killVillagerMakesHostile;
+		}
+		if (action == ReputationAction.BREAK_HAY_BALE) {
+			PairKey pair = new PairKey(villageId, player);
+			HayCount h = hay.get(pair);
+			if (h == null || now < h.start() || now - h.start() >= DAY_TICKS) {
+				h = new HayCount(now, 0);
+			}
+			h = new HayCount(h.start(), h.count() + 1);
+			hay.put(pair, h);
+			return witnessed && cfg.hayBalesForHostility > 0 && h.count() >= cfg.hayBalesForHostility;
+		}
+		return false;
+	}
+
+	/** Drops the player to the hostile score (never raises it) and locks passive recovery like a grave offense. */
+	public void declareHostile(PlayerStanding st, long now) {
+		ModConfig cfg = ModConfig.get();
+		int before = st.score;
+		st.setScore(Math.min(before, cfg.instantHostileScore));
+		st.lastRecoveryTime = now;
+		st.graveLockUntil = Math.max(st.graveLockUntil, now + cfg.graveOffenseLockTicks);
+		st.addHistory(new HistoryEntry("declared_hostile", st.score - before, now, true), cfg.maxHistoryEntriesPerPlayer);
+	}
+
+	/** True when the village treats the player as someone it may attack (score at or below the rebellion threshold). */
+	public static boolean isWanted(PlayerStanding st) {
+		return st.score <= ModConfig.get().rebellionThreshold;
 	}
 
 	/**

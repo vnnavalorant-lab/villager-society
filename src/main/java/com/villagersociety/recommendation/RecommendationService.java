@@ -2,7 +2,7 @@ package com.villagersociety.recommendation;
 
 import com.villagersociety.VillagerSociety;
 import com.villagersociety.config.ModConfig;
-import com.villagersociety.dialogue.Say;
+import com.villagersociety.feedback.Say;
 import com.villagersociety.persistence.SocietyData.PlayerStanding;
 import com.villagersociety.persistence.SocietyData.RecommendationRecord;
 import com.villagersociety.persistence.SocietyData.VillageData;
@@ -97,7 +97,7 @@ public final class RecommendationService {
 		letter.shrink(1);
 		int gained = VillagerSociety.REPUTATION.grantTrust(st, bonus, now);
 		state.setDirty();
-		Say.toPlayer(player, "O chefe de outra vila falou bem de você. (+" + gained + " de confiança)");
+		Say.toPlayer(player, "Carta aceita: +" + gained + " de confiança nesta vila.");
 	}
 
 	private static String shortId(UUID id) {

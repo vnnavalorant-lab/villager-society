@@ -7,13 +7,12 @@ public final class TradeRules {
 	private TradeRules() {
 	}
 
-	public static boolean isRebellionActive(String rebellionState) {
-		return "MOBILIZATION".equals(rebellionState) || "REBELLION".equals(rebellionState)
-			|| "PURSUIT".equals(rebellionState);
-	}
-
-	public static boolean shouldRefuse(String villageRebellionState, int playerScore, ModConfig cfg) {
+	/**
+	 * @param rebellionActiveAgainstThisPlayer the village is mobilized/fighting against THIS player
+	 *                                         (other players are never affected by it)
+	 */
+	public static boolean shouldRefuse(boolean rebellionActiveAgainstThisPlayer, int playerScore, ModConfig cfg) {
 		return cfg.refuseTradeDuringRebellion
-			&& (isRebellionActive(villageRebellionState) || playerScore <= cfg.rebellionThreshold);
+			&& (rebellionActiveAgainstThisPlayer || playerScore <= cfg.rebellionThreshold);
 	}
 }

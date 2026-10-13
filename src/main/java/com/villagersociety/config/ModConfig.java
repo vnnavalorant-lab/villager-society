@@ -31,6 +31,15 @@ public class ModConfig {
 	public int repStealContainer = -8;
 	public int repAttackVillager = -15;
 	public int repKillVillager = -40;
+	public int repBreakHayBale = -25;
+
+	// ---- Instant hostility (crimes that make villagers consider you an enemy right away) ----
+	/** Killing a villager in front of at least one witness makes you hostile immediately. */
+	public boolean killVillagerMakesHostile = true;
+	/** Hay bales broken within one in-game day (witnessed) that trigger hostility. 1 = any single bale, 0 = disabled. */
+	public int hayBalesForHostility = 1;
+	/** Score you drop to (at most) when declared hostile. Always at or below rebellionThreshold. */
+	public int instantHostileScore = -80;
 	/** Extra penalty multiplier applied when repeating an offense after a warning. */
 	public double repeatOffenseMultiplier = 1.5;
 	/** Global punishment intensity (0.1 - 3.0). */
@@ -67,6 +76,12 @@ public class ModConfig {
 	public double meleeDamage = 3.0;
 	public double meleeRange = 2.0;
 	public int meleeCooldownTicks = 20;
+	/** How many villagers may strike at the same moment (the rest circle and wait). */
+	public int maxSimultaneousAttackers = 3;
+	/** After a rebellion ends, the same village will not start another against the same player for this long. */
+	public int rebellionCooldownTicks = 3600;
+	/** Show an axe/hoe in the hands of fighting villagers (visual only). */
+	public boolean showWeapons = true;
 	/** Suspicion level (reputation) at which each rebellion phase starts. */
 	public int suspicionThreshold = -20;
 	public int warningThreshold = -35;
@@ -91,6 +106,12 @@ public class ModConfig {
 	// ---- History limits ----
 	public int maxHistoryEntriesPerPlayer = 30;
 
+	// ---- HUD (client) ----
+	/** Show the reputation panel above the hotbar while you are inside a village. */
+	public boolean hudEnabled = true;
+	/** Distance in pixels from the bottom of the screen to the panel (raise it if it overlaps other HUD mods). */
+	public int hudOffsetY = 62;
+
 	// ---- Debug ----
 	/** Enables /villagersociety debug <action> (changes your own reputation; for testing only). */
 	public boolean debugCommands = false;
@@ -108,6 +129,8 @@ public class ModConfig {
 		repStealContainer = clamp(repStealContainer, -100, 0);
 		repAttackVillager = clamp(repAttackVillager, -100, 0);
 		repKillVillager = clamp(repKillVillager, -100, 0);
+		repBreakHayBale = clamp(repBreakHayBale, -100, 0);
+		hayBalesForHostility = clamp(hayBalesForHostility, 0, 1000);
 		repeatOffenseMultiplier = clamp(repeatOffenseMultiplier, 1.0, 5.0);
 		punishmentIntensity = clamp(punishmentIntensity, 0.1, 3.0);
 
@@ -133,12 +156,16 @@ public class ModConfig {
 		meleeDamage = clamp(meleeDamage, 0.0, 10.0);
 		meleeRange = clamp(meleeRange, 1.0, 4.0);
 		meleeCooldownTicks = clamp(meleeCooldownTicks, 5, 200);
+		maxSimultaneousAttackers = clamp(maxSimultaneousAttackers, 1, 8);
+		rebellionCooldownTicks = clamp(rebellionCooldownTicks, 600, 72000);
 
 		// Thresholds must be strictly ordered: suspicion > warning > mobilization > rebellion.
 		rebellionThreshold = clamp(rebellionThreshold, -100, -4);
 		mobilizationThreshold = clamp(mobilizationThreshold, rebellionThreshold + 1, -3);
 		warningThreshold = clamp(warningThreshold, mobilizationThreshold + 1, -2);
 		suspicionThreshold = clamp(suspicionThreshold, warningThreshold + 1, -1);
+
+		instantHostileScore = clamp(instantHostileScore, -100, rebellionThreshold);
 
 		maxDiscount = clamp(maxDiscount, 0.0, 0.5);
 		friendDiscount = clamp(friendDiscount, 0.0, maxDiscount);
@@ -152,6 +179,7 @@ public class ModConfig {
 		letterTrustBonusUnknownVillage = clamp(letterTrustBonusUnknownVillage, 0, letterTrustBonus);
 
 		maxHistoryEntriesPerPlayer = clamp(maxHistoryEntriesPerPlayer, 5, 200);
+		hudOffsetY = clamp(hudOffsetY, 20, 300);
 	}
 
 	// ------------------------------------------------------------------ IO

@@ -9,7 +9,8 @@
   "environment": "*",
   "mixins": ["villager_society.mixins.json"],
   "entrypoints": {
-    "main": ["com.villagersociety.VillagerSociety"]
+    "main": ["com.villagersociety.VillagerSociety"],
+    "client": ["com.villagersociety.client.VillagerSocietyClient"]
   },
   "depends": {
     "fabricloader": ">=0.18.0",

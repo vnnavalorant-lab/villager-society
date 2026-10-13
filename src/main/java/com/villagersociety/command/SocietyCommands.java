@@ -11,6 +11,7 @@ import com.villagersociety.persistence.SocietyState;
 import com.villagersociety.reputation.ReputationAction;
 import com.villagersociety.reputation.ReputationLevel;
 import com.villagersociety.reputation.ReputationManager;
+import com.villagersociety.rebellion.RebellionPhase;
 import com.villagersociety.village.LeaderService;
 import com.villagersociety.village.Personality;
 import com.villagersociety.village.VillageLocator;
@@ -27,7 +28,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * /villagersociety info                 -> village, leader and your standing at your position
+ * Commands exist only with debugCommands=true. The reputation HUD panel replaces the old /villagersociety info.
+ * /villagersociety debug info           -> village, leader, standing, phase at your position
  * /villagersociety debug <action>       -> applies a reputation action to yourself (debugCommands=true only)
  * /villagersociety debug set <score>    -> sets your score in the current village (debugCommands=true only)
  * /villagersociety debug enemy          -> score -100 with a grave-offense lock (no passive recovery)
@@ -42,21 +44,19 @@ public final class SocietyCommands {
 
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-			LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("villagersociety")
-				.then(Commands.literal("info").executes(ctx -> info(ctx.getSource())));
-
-			if (ModConfig.get().debugCommands) {
-				LiteralArgumentBuilder<CommandSourceStack> debug = Commands.literal("debug");
-				for (ReputationAction action : ReputationAction.values()) {
-					debug.then(Commands.literal(action.id()).executes(ctx -> debugAction(ctx.getSource(), action)));
-				}
-				debug.then(Commands.literal("maxout").executes(ctx -> maxOut(ctx.getSource())));
-				debug.then(Commands.literal("enemy").executes(ctx -> makeEnemy(ctx.getSource())));
-				debug.then(Commands.literal("set").then(Commands.argument("score", IntegerArgumentType.integer(-100, 100))
-					.executes(ctx -> setScore(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "score")))));
-				root.then(debug);
+			if (!ModConfig.get().debugCommands) {
+				return; // normal play uses the HUD panel; no commands are registered
 			}
-			dispatcher.register(root);
+			LiteralArgumentBuilder<CommandSourceStack> debug = Commands.literal("debug")
+				.then(Commands.literal("info").executes(ctx -> info(ctx.getSource())));
+			for (ReputationAction action : ReputationAction.values()) {
+				debug.then(Commands.literal(action.id()).executes(ctx -> debugAction(ctx.getSource(), action)));
+			}
+			debug.then(Commands.literal("maxout").executes(ctx -> maxOut(ctx.getSource())));
+			debug.then(Commands.literal("enemy").executes(ctx -> makeEnemy(ctx.getSource())));
+			debug.then(Commands.literal("set").then(Commands.argument("score", IntegerArgumentType.integer(-100, 100))
+				.executes(ctx -> setScore(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "score")))));
+			dispatcher.register(Commands.literal("villagersociety").then(debug));
 		});
 	}
 
@@ -83,6 +83,14 @@ public final class SocietyCommands {
 			village.center.getX(), village.center.getY(), village.center.getZ(), village.radius));
 		reply(src, String.format(Locale.ROOT, "Sua reputação: %d (%s) | trocas: %d | boas ações: %d | infrações: %d",
 			st.score, lvl.displayName(), st.tradesCompleted, st.goodDeeds, st.offenses));
+
+		if (ReputationManager.isWanted(st)) {
+			reply(src, "Status: PROCURADO. Os moradores desta vila consideram você um inimigo.");
+		}
+		RebellionPhase phase = VillagerSociety.REBELLIONS.phaseOf(village.id, player.getUUID());
+		if (phase != RebellionPhase.NONE) {
+			reply(src, "Fase da vila contra você: " + phase.name());
+		}
 
 		Optional<UUID> leader = LeaderService.ensureLeader(level, village, state);
 		if (leader.isPresent()) {

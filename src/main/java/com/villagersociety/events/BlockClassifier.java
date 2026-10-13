@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.PoiTypeTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.village.poi.PoiTypes;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
 /**
  * Decides whether a broken block is an offense.
  *  - Mature crops are harvested, not destroyed: no offense. Immature crops = BREAK_CROP.
+ *  - Hay bales (the village's stored harvest) = BREAK_HAY_BALE, which can make you hostile at once.
  *  - Any block that is a village POI (beds, job sites, bell) = BREAK_BED_OR_WORKSTATION.
  *
  * UNVERIFIED API POINTS (1.21.11): PoiTypes.forState(BlockState), CropBlock#isMaxAge(BlockState).
@@ -23,6 +25,9 @@ public final class BlockClassifier {
 	}
 
 	public static Optional<ReputationAction> classifyBreak(BlockState state) {
+		if (state.is(Blocks.HAY_BLOCK)) {
+			return Optional.of(ReputationAction.BREAK_HAY_BALE);
+		}
 		if (state.getBlock() instanceof CropBlock crop) {
 			return crop.isMaxAge(state) ? Optional.empty() : Optional.of(ReputationAction.BREAK_CROP);
 		}

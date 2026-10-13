@@ -2,7 +2,6 @@ package com.villagersociety.events;
 
 import com.villagersociety.VillagerSociety;
 import com.villagersociety.config.ModConfig;
-import com.villagersociety.dialogue.Say;
 import com.villagersociety.persistence.SocietyData.VillageData;
 import com.villagersociety.persistence.SocietyState;
 import com.villagersociety.reputation.ReputationAction;
@@ -56,6 +55,12 @@ public final class InfractionService {
 		}
 		state.setDirty();
 
+		if (!action.isPositive() && VillagerSociety.REPUTATION.triggersHostility(
+			village.id, playerId, action, !witnesses.isEmpty(), now)) {
+			VillagerSociety.REPUTATION.declareHostile(village.standing(playerId), now);
+			state.setDirty();
+		}
+
 		if (!action.isPositive() && !witnesses.isEmpty()) {
 			int gossipers = 0;
 			for (LivingEntity w : witnesses) {
@@ -64,9 +69,6 @@ public final class InfractionService {
 					scheduleGossip(level, w.getUUID(), playerId, action, personality, 0);
 				}
 			}
-			Say.toPlayer(player, witnesses.size() == 1
-				? "Um morador viu o que você fez."
-				: witnesses.size() + " moradores viram o que você fez!");
 		}
 		return result;
 	}

@@ -21,6 +21,7 @@ loom {
 	mods {
 		"villager_society" {
 			sourceSet sourceSets.main
+			sourceSet sourceSets.client
 		}
 	}
 }
