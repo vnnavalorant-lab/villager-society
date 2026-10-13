@@ -26,6 +26,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,7 +53,35 @@ public final class VillagerInteractions {
 		});
 	}
 
+	/**
+	 * One right-click on an entity reaches the server as TWO interaction packets (interact-at, then interact),
+	 * and the Fabric callback runs for both. Any action that already produced a result for this player and this
+	 * villager within the last 2 ticks is answered with that same result without running again. Otherwise
+	 * donations, letters and refusal sounds would run twice (a letter would even be issued, then revoked and
+	 * issued again).
+	 */
+	private record Recent(UUID villager, long tick, InteractionResult result) {
+	}
+
+	private static final Map<UUID, Recent> RECENT = new HashMap<>();
+
 	private static InteractionResult handle(ServerLevel level, ServerPlayer player, Entity villager) {
+		long now = level.getGameTime();
+		Recent previous = RECENT.get(player.getUUID());
+		if (previous != null && previous.villager().equals(villager.getUUID()) && now - previous.tick() <= 2) {
+			return previous.result();
+		}
+		InteractionResult result = process(level, player, villager);
+		if (result != InteractionResult.PASS) {
+			if (RECENT.size() > 256) {
+				RECENT.clear();
+			}
+			RECENT.put(player.getUUID(), new Recent(villager.getUUID(), now, result));
+		}
+		return result;
+	}
+
+	private static InteractionResult process(ServerLevel level, ServerPlayer player, Entity villager) {
 		SocietyState state = SocietyState.get(level.getServer());
 		VillageData village = VillageLocator.locate(level, villager.blockPosition(), state);
 		if (village == null) {
