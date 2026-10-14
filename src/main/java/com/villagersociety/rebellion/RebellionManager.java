@@ -189,7 +189,10 @@ public final class RebellionManager {
 			RebellionPhase from = r.phase;
 			transition(state, r, v, player, from, next, tick);
 			if (next == RebellionPhase.NONE) {
-				finish(state, r, tick, from == RebellionPhase.RECOVERY || from.ordinal() >= RebellionPhase.WARNING.ordinal());
+				// The pause before a new rebellion only applies if the player is still lingering in the village;
+				// someone who died, left or logged out is treated as an enemy again as soon as they come back.
+				boolean lingering = valid && inArea;
+				finish(state, r, tick, lingering && (from == RebellionPhase.RECOVERY || from.ordinal() >= RebellionPhase.WARNING.ordinal()));
 				return;
 			}
 		}

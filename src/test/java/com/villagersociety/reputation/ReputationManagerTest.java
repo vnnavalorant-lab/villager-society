@@ -88,7 +88,7 @@ class ReputationManagerTest {
 		ReputationManager m = new ReputationManager();
 		PlayerStanding st = new PlayerStanding();
 		m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.TRADE, false, 100);
-		m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 100);
+		m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.REPAIR_DAMAGE, false, 100);
 		assertEquals(1, st.tradesCompleted);
 		assertEquals(1, st.goodDeeds);
 		assertTrue(st.score > 0);

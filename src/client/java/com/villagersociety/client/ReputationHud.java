@@ -62,6 +62,9 @@ final class ReputationHud {
 		if (data.wanted()) {
 			sb.append(" | PROCURADO");
 		}
+		if (data.leader()) {
+			sb.append(" | Líder");
+		}
 		RebellionPhase[] phases = RebellionPhase.values();
 		if (data.phase() > 0 && data.phase() < phases.length) {
 			sb.append(" | ").append(phases[data.phase()].displayName());

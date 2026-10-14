@@ -30,16 +30,12 @@ public final class ReputationManager {
 	private record DailyGain(long start, int gained) {
 	}
 
-	private record HayCount(long start, int count) {
-	}
-
 	public record Result(boolean counted, int delta, int newScore, ReputationLevel level) {
 	}
 
 	/** Transient anti-duplication / anti-farming state; safe to lose on restart. */
 	private final Map<DedupKey, Long> lastCounted = new HashMap<>();
 	private final Map<PairKey, DailyGain> daily = new HashMap<>();
-	private final Map<PairKey, HayCount> hay = new HashMap<>();
 
 	public Result apply(UUID villageId, UUID player, PlayerStanding st, Personality personality,
 						ReputationAction action, boolean accidental, long now) {
@@ -66,9 +62,6 @@ public final class ReputationManager {
 		if (daily.size() > 4096) {
 			daily.clear();
 		}
-		if (hay.size() > 4096) {
-			hay.clear();
-		}
 		lastCounted.put(key, now);
 
 		int base = action.base(cfg);
@@ -91,7 +84,7 @@ public final class ReputationManager {
 			} else if (action == ReputationAction.DEFEND_VILLAGER) {
 				delta *= personality.defendGainMultiplier();
 			}
-			if (now < st.graveLockUntil) {
+			if (now < st.graveLockUntil && action != ReputationAction.DONATE_ITEM) {
 				delta *= GRAVE_LOCK_POSITIVE_FACTOR;
 			}
 		}
@@ -101,7 +94,7 @@ public final class ReputationManager {
 			applied = negative ? -1 : 1;
 		}
 
-		if (!negative && applied > 0) {
+		if (!negative && applied > 0 && action != ReputationAction.DONATE_ITEM) {
 			PairKey pair = new PairKey(villageId, player);
 			DailyGain g = daily.get(pair);
 			if (g == null || now < g.start() || now - g.start() >= DAY_TICKS) {
@@ -151,14 +144,8 @@ public final class ReputationManager {
 			return witnessed && cfg.killVillagerMakesHostile;
 		}
 		if (action == ReputationAction.BREAK_HAY_BALE) {
-			PairKey pair = new PairKey(villageId, player);
-			HayCount h = hay.get(pair);
-			if (h == null || now < h.start() || now - h.start() >= DAY_TICKS) {
-				h = new HayCount(now, 0);
-			}
-			h = new HayCount(h.start(), h.count() + 1);
-			hay.put(pair, h);
-			return witnessed && cfg.hayBalesForHostility > 0 && h.count() >= cfg.hayBalesForHostility;
+			// Only reported once half of the village's hay is gone (see HayTracker), so reaching here is the crime.
+			return witnessed && cfg.hayCrimeMakesHostile;
 		}
 		return false;
 	}

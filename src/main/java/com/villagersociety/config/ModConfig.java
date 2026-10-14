@@ -22,7 +22,8 @@ public class ModConfig {
 	// ---- Reputation deltas per action (before personality / severity multipliers) ----
 	public int repTradeCompleted = 1;
 	public int repReplantCrop = 1;
-	public int repDonateItem = 2;
+	/** Reputation per emerald given to a villager (Ctrl + right-click). Ignores the daily cap and the grave-offense halving. */
+	public int repDonateItem = 3;
 	public int repDefendVillager = 5;
 	public int repKillMonsterNearVillage = 1;
 	public int repRepairDamage = 2;
@@ -36,8 +37,10 @@ public class ModConfig {
 	// ---- Instant hostility (crimes that make villagers consider you an enemy right away) ----
 	/** Killing a villager in front of at least one witness makes you hostile immediately. */
 	public boolean killVillagerMakesHostile = true;
-	/** Hay bales broken within one in-game day (witnessed) that trigger hostility. 1 = any single bale, 0 = disabled. */
-	public int hayBalesForHostility = 1;
+	/** Fraction of the village's hay bales that must be broken before it counts as a crime (0.5 = half of them). */
+	public double hayFractionForCrime = 0.5;
+	/** Once that crime happens in front of a witness, the village turns hostile at once. */
+	public boolean hayCrimeMakesHostile = true;
 	/** Score you drop to (at most) when declared hostile. Always at or below rebellionThreshold. */
 	public int instantHostileScore = -80;
 	/** Extra penalty multiplier applied when repeating an offense after a warning. */
@@ -78,8 +81,8 @@ public class ModConfig {
 	public int meleeCooldownTicks = 20;
 	/** How many villagers may strike at the same moment (the rest circle and wait). */
 	public int maxSimultaneousAttackers = 3;
-	/** After a rebellion ends, the same village will not start another against the same player for this long. */
-	public int rebellionCooldownTicks = 3600;
+	/** If a hostile player is still standing in the village when a rebellion ends, wait this long before the next one. */
+	public int rebellionCooldownTicks = 600;
 	/** Show an axe/hoe in the hands of fighting villagers (visual only). */
 	public boolean showWeapons = true;
 	/** Suspicion level (reputation) at which each rebellion phase starts. */
@@ -106,6 +109,21 @@ public class ModConfig {
 	// ---- History limits ----
 	public int maxHistoryEntriesPerPlayer = 30;
 
+	// ---- Player leader and workers ----
+	/** Reputation needed to become the leader of a village (bell + Shift + right-click on a villager). */
+	public int leaderMinReputation = 85;
+	/** A leader whose reputation drops below this loses the leadership (and the workers are released). */
+	public int leaderKeepReputation = 40;
+	public int maxWorkersPerLeader = 8;
+	/** Radius (blocks) of a work area around the staff mark. */
+	public int workAreaRadius = 8;
+	/** Ticks a worker waits between two actions (mining a block, felling a tree, harvesting a crop). */
+	public int workerActionTicks = 40;
+	/** How far a worker looks for the nearest chest/barrel to leave the items in. */
+	public int workerChestRadius = 24;
+	/** The staff mark must be within this distance (plus the village radius) of the village center. */
+	public int markMaxDistance = 64;
+
 	// ---- HUD (client) ----
 	/** Show the reputation panel above the hotbar while you are inside a village. */
 	public boolean hudEnabled = true;
@@ -130,7 +148,7 @@ public class ModConfig {
 		repAttackVillager = clamp(repAttackVillager, -100, 0);
 		repKillVillager = clamp(repKillVillager, -100, 0);
 		repBreakHayBale = clamp(repBreakHayBale, -100, 0);
-		hayBalesForHostility = clamp(hayBalesForHostility, 0, 1000);
+		hayFractionForCrime = clamp(hayFractionForCrime, 0.1, 1.0);
 		repeatOffenseMultiplier = clamp(repeatOffenseMultiplier, 1.0, 5.0);
 		punishmentIntensity = clamp(punishmentIntensity, 0.1, 3.0);
 
@@ -157,7 +175,7 @@ public class ModConfig {
 		meleeRange = clamp(meleeRange, 1.0, 4.0);
 		meleeCooldownTicks = clamp(meleeCooldownTicks, 5, 200);
 		maxSimultaneousAttackers = clamp(maxSimultaneousAttackers, 1, 8);
-		rebellionCooldownTicks = clamp(rebellionCooldownTicks, 600, 72000);
+		rebellionCooldownTicks = clamp(rebellionCooldownTicks, 200, 72000);
 
 		// Thresholds must be strictly ordered: suspicion > warning > mobilization > rebellion.
 		rebellionThreshold = clamp(rebellionThreshold, -100, -4);
@@ -180,6 +198,14 @@ public class ModConfig {
 
 		maxHistoryEntriesPerPlayer = clamp(maxHistoryEntriesPerPlayer, 5, 200);
 		hudOffsetY = clamp(hudOffsetY, 20, 300);
+
+		leaderMinReputation = clamp(leaderMinReputation, 1, 100);
+		leaderKeepReputation = clamp(leaderKeepReputation, -100, leaderMinReputation);
+		maxWorkersPerLeader = clamp(maxWorkersPerLeader, 1, 32);
+		workAreaRadius = clamp(workAreaRadius, 3, 16);
+		workerActionTicks = clamp(workerActionTicks, 10, 400);
+		workerChestRadius = clamp(workerChestRadius, 4, 48);
+		markMaxDistance = clamp(markMaxDistance, 16, 256);
 	}
 
 	// ------------------------------------------------------------------ IO

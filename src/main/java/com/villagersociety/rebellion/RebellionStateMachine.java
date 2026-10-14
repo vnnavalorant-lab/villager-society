@@ -12,7 +12,7 @@ public final class RebellionStateMachine {
 	public static final long WARNING_MIN = 100;
 	public static final long MOBILIZATION_MIN = 100;
 	public static final long MOBILIZATION_MAX = 600;
-	public static final long RECOVERY_TICKS = 600;
+	public static final long RECOVERY_TICKS = 400;
 	public static final long LEAVE_GRACE = 400;
 	public static final int HYSTERESIS = 5;
 
@@ -39,8 +39,15 @@ public final class RebellionStateMachine {
 
 		switch (cur) {
 			case NONE:
-				return (c.score() <= cfg.suspicionThreshold && c.playerInArea())
-					? RebellionPhase.SUSPICION : RebellionPhase.NONE;
+				if (!c.playerInArea()) {
+					return RebellionPhase.NONE;
+				}
+				// A known enemy (already at/below the rebellion threshold) skips suspicion and warning:
+				// the village has already decided about this player, so coming back means mobilization at once.
+				if (c.score() <= cfg.rebellionThreshold) {
+					return RebellionPhase.MOBILIZATION;
+				}
+				return c.score() <= cfg.suspicionThreshold ? RebellionPhase.SUSPICION : RebellionPhase.NONE;
 
 			case SUSPICION:
 				if (c.score() > cfg.suspicionThreshold + HYSTERESIS) {
@@ -84,12 +91,18 @@ public final class RebellionStateMachine {
 				return cur;
 
 			case REBELLION:
+				if (c.score() > cfg.mobilizationThreshold) {
+					return RebellionPhase.RECOVERY; // bought back the village's trust
+				}
 				if (c.participating() < 1 || c.now() - c.startedAt() > maxTotal) {
 					return RebellionPhase.RECOVERY;
 				}
 				return c.playerInArea() ? cur : RebellionPhase.PURSUIT;
 
 			case PURSUIT:
+				if (c.score() > cfg.mobilizationThreshold) {
+					return RebellionPhase.RECOVERY;
+				}
 				if (c.participating() < 1 || c.now() - c.startedAt() > maxTotal) {
 					return RebellionPhase.RECOVERY;
 				}

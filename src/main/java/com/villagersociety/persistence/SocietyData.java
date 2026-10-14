@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Pure data model persisted in the world. No logic beyond clamping/trimming,
- * so rules live in the reputation/ village/ recommendation/ modules.
+ * so rules live in the reputation/ village/ recommendation/ leader/ workers/ modules.
  * Each class exposes a Codec used by {@link SocietyState}.
  */
 public final class SocietyData {
@@ -89,14 +89,20 @@ public final class SocietyData {
 		public int radius;
 		/** Personality id (resolved by village/ module). Stored as string to survive enum changes. */
 		public String personality;
-		/** UUID of the villager acting as leader/representative, if any. */
+		/** UUID of the villager acting as representative (issues/receives recommendation letters), if any. */
 		public Optional<UUID> leader;
 		public String rebellionState;
 		/** Player UUID -> standing. */
 		public final Map<UUID, PlayerStanding> standings;
+		/** UUID of the PLAYER who leads this village, if any. */
+		public Optional<UUID> playerLeader;
+		/** Hay bales counted in the village when the first one was broken, and how many were broken since. */
+		public int hayTotal;
+		public int hayBroken;
 
 		public VillageData(UUID id, BlockPos center, int radius, String personality,
-						   Optional<UUID> leader, String rebellionState, Map<UUID, PlayerStanding> standings) {
+						   Optional<UUID> leader, String rebellionState, Map<UUID, PlayerStanding> standings,
+						   Optional<UUID> playerLeader, int hayTotal, int hayBroken) {
 			this.id = id;
 			this.center = center;
 			this.radius = radius;
@@ -104,6 +110,14 @@ public final class SocietyData {
 			this.leader = leader;
 			this.rebellionState = rebellionState;
 			this.standings = new HashMap<>(standings);
+			this.playerLeader = playerLeader;
+			this.hayTotal = Math.max(0, hayTotal);
+			this.hayBroken = Math.max(0, hayBroken);
+		}
+
+		public VillageData(UUID id, BlockPos center, int radius, String personality,
+						   Optional<UUID> leader, String rebellionState, Map<UUID, PlayerStanding> standings) {
+			this(id, center, radius, personality, leader, rebellionState, standings, Optional.empty(), 0, 0);
 		}
 
 		public PlayerStanding standing(UUID player) {
@@ -118,11 +132,14 @@ public final class SocietyData {
 			UUIDUtil.STRING_CODEC.optionalFieldOf("leader").forGetter(v -> v.leader),
 			Codec.STRING.optionalFieldOf("rebellion_state", "NONE").forGetter(v -> v.rebellionState),
 			Codec.unboundedMap(UUIDUtil.STRING_CODEC, PlayerStanding.CODEC)
-				.optionalFieldOf("standings", Map.of()).forGetter(v -> v.standings)
+				.optionalFieldOf("standings", Map.of()).forGetter(v -> v.standings),
+			UUIDUtil.STRING_CODEC.optionalFieldOf("player_leader").forGetter(v -> v.playerLeader),
+			Codec.INT.optionalFieldOf("hay_total", 0).forGetter(v -> v.hayTotal),
+			Codec.INT.optionalFieldOf("hay_broken", 0).forGetter(v -> v.hayBroken)
 		).apply(i, VillageData::new));
 	}
 
-	/** Server-side authority record of an issued recommendation letter. */
+	/** Server-authority record of an issued recommendation letter. */
 	public static final class RecommendationRecord {
 		public final UUID id;
 		public final UUID issuerVillage;
@@ -155,5 +172,34 @@ public final class SocietyData {
 			Codec.BOOL.optionalFieldOf("used", false).forGetter(r -> r.used),
 			UUIDUtil.STRING_CODEC.optionalFieldOf("used_in_village").forGetter(r -> r.usedInVillage)
 		).apply(i, RecommendationRecord::new));
+	}
+
+	/** A villager assigned by a village leader to a job (mine stone, chop trees, farm) around a point. */
+	public static final class WorkerAssignment {
+		public final UUID villager;
+		public final UUID owner;
+		public final UUID village;
+		/** Job id (resolved by workers/ module). */
+		public final String job;
+		public final BlockPos center;
+		public final int radius;
+
+		public WorkerAssignment(UUID villager, UUID owner, UUID village, String job, BlockPos center, int radius) {
+			this.villager = villager;
+			this.owner = owner;
+			this.village = village;
+			this.job = job;
+			this.center = center;
+			this.radius = radius;
+		}
+
+		public static final Codec<WorkerAssignment> CODEC = RecordCodecBuilder.create(i -> i.group(
+			UUIDUtil.STRING_CODEC.fieldOf("villager").forGetter(w -> w.villager),
+			UUIDUtil.STRING_CODEC.fieldOf("owner").forGetter(w -> w.owner),
+			UUIDUtil.STRING_CODEC.fieldOf("village").forGetter(w -> w.village),
+			Codec.STRING.fieldOf("job").forGetter(w -> w.job),
+			BlockPos.CODEC.fieldOf("center").forGetter(w -> w.center),
+			Codec.INT.fieldOf("radius").forGetter(w -> w.radius)
+		).apply(i, WorkerAssignment::new));
 	}
 }

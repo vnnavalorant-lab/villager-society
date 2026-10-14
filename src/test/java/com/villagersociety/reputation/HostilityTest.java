@@ -29,25 +29,10 @@ class HostilityTest {
 	}
 
 	@Test
-	void singleHayBaleTriggersByDefault() {
+	void hayCrimeIsHostileOnceReportedInFrontOfAWitness() {
+		// It is only reported after half of the village's hay is gone (see HayRuleTest), so a report is the crime.
 		ReputationManager m = new ReputationManager();
 		assertTrue(m.triggersHostility(village, player, ReputationAction.BREAK_HAY_BALE, true, 1000));
-	}
-
-	@Test
-	void hayThresholdCanBeRaisedAndCountResetsEachDay() {
-		ModConfig cfg = ModConfig.get();
-		int old = cfg.hayBalesForHostility;
-		try {
-			cfg.hayBalesForHostility = 3;
-			ReputationManager m = new ReputationManager();
-			assertFalse(m.triggersHostility(village, player, ReputationAction.BREAK_HAY_BALE, true, 1000));
-			assertFalse(m.triggersHostility(village, player, ReputationAction.BREAK_HAY_BALE, true, 1100));
-			assertTrue(m.triggersHostility(village, player, ReputationAction.BREAK_HAY_BALE, true, 1200));
-			assertFalse(m.triggersHostility(village, player, ReputationAction.BREAK_HAY_BALE, true, 1200 + 24_000));
-		} finally {
-			cfg.hayBalesForHostility = old;
-		}
 	}
 
 	@Test

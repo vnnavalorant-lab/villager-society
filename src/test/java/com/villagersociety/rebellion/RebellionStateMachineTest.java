@@ -34,6 +34,17 @@ class RebellionStateMachineTest {
 	}
 
 	@Test
+	void aKnownEnemyIsMobilizedAgainstAsSoonAsItIsInTheVillage() {
+		assertEquals(RebellionPhase.MOBILIZATION,
+			step(ctx(RebellionPhase.NONE, 0, 0, cfg.instantHostileScore, true, true, 5, 0)));
+		assertEquals(RebellionPhase.NONE,
+			step(ctx(RebellionPhase.NONE, 0, 0, cfg.instantHostileScore, true, false, 90, 0)));
+		// a merely unpopular player still goes through suspicion first
+		assertEquals(RebellionPhase.SUSPICION,
+			step(ctx(RebellionPhase.NONE, 0, 0, cfg.suspicionThreshold, true, true, 5, 0)));
+	}
+
+	@Test
 	void tooFewParticipantsAbortsMobilization() {
 		assertEquals(RebellionPhase.RECOVERY,
 			step(ctx(RebellionPhase.MOBILIZATION, RebellionStateMachine.MOBILIZATION_MIN, 0, cfg.rebellionThreshold, true, true, 5,
@@ -73,6 +84,13 @@ class RebellionStateMachineTest {
 		assertEquals(RebellionPhase.RECOVERY, step(ctx(RebellionPhase.RECOVERY, 10, 0, -90, true, true, 5, 4)));
 		assertEquals(RebellionPhase.NONE,
 			step(ctx(RebellionPhase.RECOVERY, RebellionStateMachine.RECOVERY_TICKS, 0, -90, true, true, 5, 4)));
+	}
+
+	@Test
+	void payingTheVillageOffEndsTheRebellion() {
+		int paid = cfg.mobilizationThreshold + 1;
+		assertEquals(RebellionPhase.RECOVERY, step(ctx(RebellionPhase.REBELLION, 100, 0, paid, true, true, 5, 4)));
+		assertEquals(RebellionPhase.RECOVERY, step(ctx(RebellionPhase.PURSUIT, 100, 0, paid, true, false, 40, 4)));
 	}
 
 	@Test

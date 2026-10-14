@@ -5,35 +5,37 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.villagersociety.VillagerSociety;
 import com.villagersociety.persistence.SocietyData.RecommendationRecord;
 import com.villagersociety.persistence.SocietyData.VillageData;
+import com.villagersociety.persistence.SocietyData.WorkerAssignment;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * Single SavedData stored in the Overworld's data storage (data/villager_society_society.dat).
- * All reputation, personalities, leaders and recommendations live here and are
+ * All reputation, personalities, leaders, workers and recommendations live here and are
  * only marked dirty when something actually changes (never per tick).
- *
- * UNVERIFIED API POINTS (1.21.11, Mojang mappings) — check these when compiling:
- *  - SavedDataType constructor: id is a String (confirmed); check constructor/codec/DataFixTypes order
- *  - MinecraftServer#overworld() and ServerLevel#getDataStorage().computeIfAbsent(type)
- * All of them are isolated in this class on purpose.
+ * The API points used here were confirmed by the compiler (id is a String in 1.21.11).
  */
 public class SocietyState extends SavedData {
 	private final Map<UUID, VillageData> villages = new HashMap<>();
 	private final Map<UUID, RecommendationRecord> recommendations = new HashMap<>();
+	private final Map<UUID, WorkerAssignment> workers = new HashMap<>();
 
 	public static final Codec<SocietyState> CODEC = RecordCodecBuilder.create(i -> i.group(
 		Codec.unboundedMap(UUIDUtil.STRING_CODEC, VillageData.CODEC)
 			.optionalFieldOf("villages", Map.of()).forGetter(s -> s.villages),
 		Codec.unboundedMap(UUIDUtil.STRING_CODEC, RecommendationRecord.CODEC)
-			.optionalFieldOf("recommendations", Map.of()).forGetter(s -> s.recommendations)
+			.optionalFieldOf("recommendations", Map.of()).forGetter(s -> s.recommendations),
+		Codec.unboundedMap(UUIDUtil.STRING_CODEC, WorkerAssignment.CODEC)
+			.optionalFieldOf("workers", Map.of()).forGetter(s -> s.workers)
 	).apply(i, SocietyState::new));
 
 	public static final SavedDataType<SocietyState> TYPE = new SavedDataType<>(
@@ -46,9 +48,11 @@ public class SocietyState extends SavedData {
 	public SocietyState() {
 	}
 
-	private SocietyState(Map<UUID, VillageData> villages, Map<UUID, RecommendationRecord> recommendations) {
+	private SocietyState(Map<UUID, VillageData> villages, Map<UUID, RecommendationRecord> recommendations,
+						 Map<UUID, WorkerAssignment> workers) {
 		this.villages.putAll(villages);
 		this.recommendations.putAll(recommendations);
+		this.workers.putAll(workers);
 	}
 
 	/** Always returns the Overworld instance, the single source of truth for all dimensions. */
@@ -123,5 +127,48 @@ public class SocietyState extends SavedData {
 		record.usedInVillage = java.util.Optional.of(destinationVillage);
 		setDirty();
 		return true;
+	}
+
+	// ------------------------------------------------------------- workers
+
+	public Collection<WorkerAssignment> workers() {
+		return workers.values();
+	}
+
+	public WorkerAssignment worker(UUID villager) {
+		return workers.get(villager);
+	}
+
+	public void putWorker(WorkerAssignment assignment) {
+		workers.put(assignment.villager, assignment);
+		setDirty();
+	}
+
+	public boolean removeWorker(UUID villager) {
+		if (workers.remove(villager) != null) {
+			setDirty();
+			return true;
+		}
+		return false;
+	}
+
+	public List<WorkerAssignment> workersOfVillage(UUID village) {
+		List<WorkerAssignment> list = new ArrayList<>();
+		for (WorkerAssignment w : workers.values()) {
+			if (w.village.equals(village)) {
+				list.add(w);
+			}
+		}
+		return list;
+	}
+
+	public int workerCountOf(UUID owner) {
+		int n = 0;
+		for (WorkerAssignment w : workers.values()) {
+			if (w.owner.equals(owner)) {
+				n++;
+			}
+		}
+		return n;
 	}
 }

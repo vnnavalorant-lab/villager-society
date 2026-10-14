@@ -91,7 +91,20 @@ public final class SocietyEvents {
 	private static void onBlockBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
 		Optional<ReputationAction> action = BlockClassifier.classifyBreak(state);
 		if (action.isPresent()) {
-			report(level, player, pos, action.get());
+			if (action.get() == ReputationAction.BREAK_HAY_BALE) {
+				onHayBroken(level, player, pos);
+			} else {
+				report(level, player, pos, action.get());
+			}
+		}
+	}
+
+	/** Breaking hay is only a crime once at least half of the village's bales are gone (see HayRule). */
+	private static void onHayBroken(ServerLevel level, ServerPlayer player, BlockPos pos) {
+		SocietyState state = SocietyState.get(level.getServer());
+		VillageData village = VillageLocator.locate(level, pos, state);
+		if (village != null && HayTracker.recordBreak(level, village, state)) {
+			InfractionService.report(level, player, state, village, ReputationAction.BREAK_HAY_BALE, pos, false);
 		}
 	}
 

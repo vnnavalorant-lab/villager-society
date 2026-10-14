@@ -44,7 +44,7 @@ public final class RecommendationService {
 		if (!player.getInventory().add(letter)) {
 			player.drop(letter, false);
 		}
-		Say.toPlayer(player, "Você conquistou a confiança desta vila. Leve esta carta a outro representante.");
+		Say.toPlayer(player, "Carta de recomendação emitida.");
 	}
 
 	public static void present(ServerLevel level, ServerPlayer player, ItemStack letter, VillageData destination,

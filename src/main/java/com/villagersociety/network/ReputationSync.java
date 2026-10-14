@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -85,6 +86,7 @@ public final class ReputationSync {
 			score = st.score;
 		}
 		RebellionPhase phase = VillagerSociety.REBELLIONS.phaseOf(village.id, player.getUUID());
-		return new ReputationPayload(true, score, phase.ordinal(), score <= ModConfig.get().rebellionThreshold);
+		return new ReputationPayload(true, score, phase.ordinal(), score <= ModConfig.get().rebellionThreshold,
+			village.playerLeader.equals(Optional.of(player.getUUID())));
 	}
 }

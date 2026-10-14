@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.villagersociety.config.ModConfig;
 import com.villagersociety.persistence.SocietyData.PlayerStanding;
 import com.villagersociety.village.Personality;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -38,11 +39,25 @@ class ReputationExtrasTest {
 	}
 
 	@Test
-	void donationsAreRateLimited() {
+	void emeraldGiftsAreRateLimitedToOnePerHalfSecond() {
 		ReputationManager m = new ReputationManager();
 		PlayerStanding st = new PlayerStanding();
 		assertTrue(m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1000).counted());
-		assertFalse(m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1100).counted());
-		assertTrue(m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1700).counted());
+		assertFalse(m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1005).counted());
+		assertTrue(m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1010).counted());
+	}
+
+	@Test
+	void emeraldsRestoreReputationEvenUnderGraveLockAndAfterTheDailyCap() {
+		ReputationManager m = new ReputationManager();
+		PlayerStanding st = new PlayerStanding(-80, 0, 0, 1, 1000L, 1000L + 999_999L, List.of());
+		int per = ModConfig.get().repDonateItem;
+		var first = m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1000);
+		assertEquals(per, first.delta()); // not halved by the grave-offense lock
+		// 40 gifts in a row (spaced past the rate limit) are never stopped by the daily cap
+		for (int i = 1; i <= 40; i++) {
+			m.apply(village, player, st, Personality.COMMERCIAL, ReputationAction.DONATE_ITEM, false, 1000L + i * 10L);
+		}
+		assertEquals(Math.min(100, -80 + per * 41), st.score);
 	}
 }

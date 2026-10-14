@@ -20,6 +20,12 @@ Nada abaixo foi testado em jogo. Etapas 1 a 4 compilaram; a etapa 6 (rebelião) 
 | Carta | Item próprio; registro persistente; dono, uso único, revogação da anterior, bônus limitado abaixo de "Amigo" | sim |
 | Representante | Villager adulto escolhido de forma determinística, salvo por UUID, sem entidade nova | sim |
 | Painel de reputação (HUD) | Barra translúcida com texto acima da hotbar: reputação, nível, PROCURADO e fase da rebelião, só dentro de vila; o servidor envia os dados 1x/s só quando mudam | não |
+| Esmeraldas | Ctrl + botão direito com esmeralda: +3 de reputação por unidade, sem teto diário nem corte de crime grave; encerra rebelião se a reputação passar de -50 | não |
+| Feno | Só é crime quando metade dos blocos da vila foi quebrada (contagem feita na 1ª quebra, salva com a vila) | não |
+| Líder da vila (jogador) | Sino + Shift + botão direito com reputação ≥ 85; cajado próprio; perde a liderança abaixo de 40; tudo salvo no mundo | não |
+| Imigração | Cajado no modo Imigração: morador vai (teletransporte) para outra vila com cama livre, esquece casa e trabalho | não |
+| Trabalhadores | Mineração, lenhador e plantação com ferramenta virtual; itens marcados vão ao baú/barril mais próximo; só de dia, só em chunks carregados | não |
+| Mensagens | Chat só no fluxo da carta; cajado usa a barra de ações; texto repetido bloqueado por 5 s; duplo processamento do clique corrigido | não |
 | Reações sem falas | Villagers não falam: recusam troca, fazem o som "não"/"sim" do jogo, doação tem retorno sonoro, preços mudam com a reputação | não |
 | Rebelião | Máquina de 6 fases com histerese e limites; papéis (defensor, flanqueador, protetor, alertador, fuga); sino; golpes reais com alcance, intervalo e dano configuráveis; atacantes simultâneos limitados; perseguição com limite de tempo e distância; encerramento seguro | não |
 | Armas visuais | Machado/enxada na mão principal, marcada por tag, limpa ao terminar, ao morrer e ao carregar a entidade | não |
@@ -46,7 +52,12 @@ Nada abaixo foi testado em jogo. Etapas 1 a 4 compilaram; a etapa 6 (rebelião) 
 
 - Só Overworld; sem fofoca entre vilas; sem presentes de benfeitores/heróis; sem falas (só o fluxo da carta mostra mensagens de sistema).
 - Contêiner comunitário = bloco de POI que guarda itens (ex.: barril). Baús comuns não contam.
-- Crime sem testemunha só pesa 30% e não causa hostilidade imediata.
+- Crime sem testemunha só pesa 30% e não causa hostilidade imediata (vale também para a regra do feno).
+- Comida não dá mais reputação (só esmeralda). A tecla "Ctrl" é a tecla de correr: se você a remapear, é ela que vale.
+- Trabalhadores: a mineração não distingue pedra de fundação de casas; use a marca longe das construções. Alvos inalcançáveis são ignorados por 2 min.
+  O baú só vale se tiver espaço; baú duplo conta como duas metades. Não há fila nem trabalho à noite.
+- Imigração é por teletransporte e só no Overworld; o morador pode demorar a achar cama/trabalho, como qualquer villager.
+- A contagem de feno usa só chunks carregados na hora da 1ª quebra e não é refeita se você repuser blocos.
 - Fuga dos villagers = afastar-se do jogador; não procuram camas/abrigo.
 - Teto diário de reputação, anti-duplicação, memória de testemunhas e rebeliões ativas são transitórios (reiniciam com o servidor);
   reputação e crimes graves persistem.

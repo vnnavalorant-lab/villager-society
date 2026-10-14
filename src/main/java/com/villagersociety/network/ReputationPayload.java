@@ -14,8 +14,8 @@ import net.minecraft.resources.Identifier;
  *
  * UNVERIFIED API POINTS (1.21.11): CustomPacketPayload.Type constructor, StreamCodec.composite, ByteBufCodecs.
  */
-public record ReputationPayload(boolean inVillage, int score, int phase, boolean wanted) implements CustomPacketPayload {
-	public static final ReputationPayload NONE = new ReputationPayload(false, 0, 0, false);
+public record ReputationPayload(boolean inVillage, int score, int phase, boolean wanted, boolean leader) implements CustomPacketPayload {
+	public static final ReputationPayload NONE = new ReputationPayload(false, 0, 0, false, false);
 
 	public static final CustomPacketPayload.Type<ReputationPayload> TYPE = new CustomPacketPayload.Type<>(
 		Identifier.fromNamespaceAndPath(VillagerSociety.MOD_ID, "reputation"));
@@ -25,6 +25,7 @@ public record ReputationPayload(boolean inVillage, int score, int phase, boolean
 		ByteBufCodecs.INT, ReputationPayload::score,
 		ByteBufCodecs.INT, ReputationPayload::phase,
 		ByteBufCodecs.BOOL, ReputationPayload::wanted,
+		ByteBufCodecs.BOOL, ReputationPayload::leader,
 		ReputationPayload::new);
 
 	@Override
